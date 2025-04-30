@@ -1,0 +1,110 @@
+{
+  "1": {
+    "short_name": "outer_corner",
+    "definition": "The outer edge of the eye, where the top and bottom eyelids meet the eyeball."
+  },
+  "2": {
+    "short_name": "upper_lid_mid_outer",
+    "definition": "The meeting point of the upper eyelid and the eyeball halfway between landmarks 3 and 26."
+  },
+  "3": {
+    "short_name": "upper_lid_highest",
+    "definition": "The highest meeting point of the upper eyelid and the eyeball."
+  },
+  "4": {
+    "short_name": "upper_lid_mid_inner",
+    "definition": "The meeting point of the upper eyelid and the eyeball half way between landmarks 3 and 17."
+  },
+  "5": {
+    "short_name": "inner_corner",
+    "definition": "The inner edge of the eye, where the top and bottom eyelids meet the eyeball, on the inner edge of the tear duct."
+  },
+  "6": {
+    "short_name": "iris_inner_edge",
+    "definition": "The meeting point of the iris and the sclera (white part) which is closest to the nose bridge."
+  },
+  "7": {
+    "short_name": "pupil_inner_edge",
+    "definition": "The meeting point of the pupil and the iris which is closest to the nose bridge."
+  },
+  "8": {
+    "short_name": "pupil_center",
+    "definition": "The center of the pupil."
+  },
+  "9": {
+    "short_name": "pupil_bottom",
+    "definition": "The lowest meeting point of the pupil and the iris."
+  },
+  "10": {
+    "short_name": "pupil_outer_edge",
+    "definition": "The meeting point of the pupil and the iris which is furthest away from the nose bridge."
+  },
+  "11": {
+    "short_name": "iris_outer_edge",
+    "definition": "The meeting point of the iris and the sclera which is furthest away from the nose bridge."
+  },
+  "12": {
+    "short_name": "lower_lid_outer",
+    "definition": "The meeting point of the lower eyelid and the eyeball directly below 2."
+  },
+  "13": {
+    "short_name": "iris_bottom",
+    "definition": "The lowest meeting point of the iris and the sclera."
+  },
+  "14": {
+    "short_name": "lower_lid_mid_inner",
+    "definition": "The meeting point of the lower eyelid and the eyeball directly below 4."
+  },
+  "15": {
+    "short_name": "lower_lid_inner",
+    "definition": "The meeting point of the lower eyelid and the eyeball directly below 17."
+  },
+  "16": {
+    "short_name": "tear_duct_outer",
+    "definition": "Another mark of the eye's inner edge, more external than landmark 5. This mark should be on the external edge of the tear duct."
+  },
+  "17": {
+    "short_name": "upper_lid_inner",
+    "definition": "The meeting point of the upper eyelid and the eyeball, halfway between landmarks 4 and 5."
+  },
+  "18": {
+    "short_name": "iris_bottom_inner_30deg",
+    "definition": "A point on the bottom inner edge of the iris and the sclera. This point should be at 30° angle to the horizontal line."
+  },
+  "19": {
+    "short_name": "lower_lid_middle",
+    "definition": "The meeting point of the upper eyelid and the eyeball directly below 3."
+  },
+  "20": {
+    "short_name": "iris_bottom_outer_30deg",
+    "definition": "A point on the bottom outer edge of the iris and the sclera. This point should be at 30° angle to the horizontal line."
+  },
+  "21": {
+    "short_name": "lower_lid_outer_corner",
+    "definition": "The meeting point of the lower eyelid and the eyeball directly below 26."
+  },
+  "22": {
+    "short_name": "pupil_bottom_outer_30deg",
+    "definition": "A point on the bottom outer edge of the pupil and the iris. This point should be at 30° angle to the horizontal line."
+  },
+  "23": {
+    "short_name": "pupil_top_outer_30deg",
+    "definition": "A point on the upper outer edge of the pupil and the iris. This point should be at 30° angle to the horizontal line."
+  },
+  "24": {
+    "short_name": "pupil_top_inner_30deg",
+    "definition": "A point on the upper inner edge of the pupil and the iris. This point should be at 30° angle to the horizontal line."
+  },
+  "25": {
+    "short_name": "pupil_bottom_inner_30deg",
+    "definition": "A point on the bottom inner edge of the pupil and the iris. This point should be at 30° angle to the horizontal line."
+  },
+  "26": {
+    "short_name": "upper_lid_outer_corner",
+    "definition": "The meeting point of the upper eyelid and the eyeball, halfway between landmarks 1 and 2."
+  },
+  "27": {
+    "short_name": "eyelash_corner",
+    "definition": "Another mark of the eye's outer edge, more external than landmark 1. Where the line of eyelashes on the top and bottom eyelids meets."
+  }
+}
