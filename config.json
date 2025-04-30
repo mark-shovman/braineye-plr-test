@@ -5,5 +5,9 @@
   "eye_color": {
     "left": "blue",
     "right": "red"
-  }
+  },
+  "smoothing_window": 5,
+  "stable_interval_start": -1,
+  "stable_interval_end": 0,
+  "nominal_iris_size_mm": 11.7
 }

@@ -31,7 +31,7 @@ has the suffix “_protocol.csv”
    * Come up with a metric to represent the signal quality for a single test and explain your
    reasoning and observation.
    * My Notes:
-     * Most of the noise I see is high-frequency frame-to-frame, which is typical for camera based trackers that analyse each video frame on its own.
+     * Most of the noise I see is high-frequency frame-to-frame, which is typical for camera-based trackers that analyse each video frame on its own.
      * I assume that one second before the flash is a stable fixation, and the user is trying not to blink during that time, so it can be used to extract a measure of signal stability. 
      * Another relatively stable portion is between second 1 and 2 after the flash, and it is also more relevant to the biomarkers we want to derive.
      * For a stable fixation, the pupil size should remain relatively constant, so any changes can be considered noise.
@@ -59,3 +59,7 @@ has the suffix “_protocol.csv”
 * `analyse_plr.py` - main analysis pipeline
 * `landmark_definitions.json` - converted from `Landmark Definitions.pdf` using Claude
 * `config.json` - various configurable parameters
+
+# TODO
+* split into files: pipeline, logic, plotting
+* save figures to folders

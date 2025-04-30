@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 
-def load_plr_data(data_dir:str, rec_id):
+def load_plr_data(data_dir:str, test_id):
     """
     Load PLR data from a given recording ID
         * set rows with retcode != 'OK' to NaN values
@@ -23,13 +23,13 @@ def load_plr_data(data_dir:str, rec_id):
         * reset index to time since onset, in seconds
     """
 
-    lm = pd.read_csv(os.path.join(data_dir, rec_id, rec_id + '_plr_landmarks.csv'),
+    lm = pd.read_csv(os.path.join(data_dir, test_id, test_id + '_plr_landmarks.csv'),
                      parse_dates=['timestamp'],
                      date_format='%Y-%m-%d %H:%M:%S.%f')
 
     lm.loc[lm['retcode'] != 'OK', lm.columns.drop(['timestamp', 'retcode'])] = np.nan
 
-    pt = pd.read_csv(os.path.join(data_dir, rec_id, rec_id + '_plr_protocol.csv'),
+    pt = pd.read_csv(os.path.join(data_dir, test_id, test_id + '_plr_protocol.csv'),
                      parse_dates=['time'],
                      date_format='%Y-%m-%d %H:%M:%S.%f')
 
@@ -37,8 +37,8 @@ def load_plr_data(data_dir:str, rec_id):
         onset = pt.time[pt.event == 'FlashOn'].values[0]
         offset = pt.time[pt.event == 'FlashOff'].values[0]
     except Exception as e:
-        logging.error(f'Missing onset or offset in {rec_id}')
-        raise IndexError(f'Either onset of offset missing in {rec_id}').with_traceback(e.__traceback__)
+        logging.error(f'Missing onset or offset in {test_id}')
+        raise IndexError(f'Either onset of offset missing in {test_id}').with_traceback(e.__traceback__)
 
     lm['is_flash_on'] = False
     lm.loc[(lm.timestamp >= onset) & (lm.timestamp <= offset), 'is_flash_on'] = True
@@ -46,7 +46,7 @@ def load_plr_data(data_dir:str, rec_id):
     lm.index = (lm.timestamp - onset).dt.total_seconds()
     lm.index.name = 'time_from_flash_s'
 
-    return lm
+    return lm, (offset - onset)/ np.timedelta64(1, 's')
 
 
 def plot_landmark(lm, lm_id):
@@ -55,7 +55,7 @@ def plot_landmark(lm, lm_id):
     ax[0].set_title(f'{lm_id}: {lm_defs[str(lm_id)]["short_name"]}')
 
 
-def calculate_pupil_size(lm, eye='left', nominal_iris_size_mm=11.7):
+def calculate_pupil_size(lm, eye, nominal_iris_size_mm):
     """
     Calculate pupil size (diameter) for a given eye
     """
@@ -85,12 +85,39 @@ def calculate_pupil_size(lm, eye='left', nominal_iris_size_mm=11.7):
 
         ret[col_name] = np.sqrt(((x2 - x1) ** 2 + (y2 - y1) ** 2))
 
-    ret[f'{eye}_mean_pupil_size_px'] = ret[col_names].mean(axis=1)
-    ret[f'{eye}_mean_pupil_size_mm'] = ret[f'{eye}_mean_pupil_size_px'] / ret[f'{eye}_iris_size_px'] * nominal_iris_size_mm
+    ret[f'{eye}_pupil_size_px'] = ret[col_names].mean(axis=1)
+    ret[f'{eye}_pupil_size_mm'] = ret[f'{eye}_pupil_size_px'] / ret[f'{eye}_iris_size_px'] * nominal_iris_size_mm
 
     # ret.plot(subplots=True, sharex=True)
 
     return ret
+
+def calculate_signal_quality(lm):
+    def rms_s2s(s):
+        return np.sqrt((s.diff()**2).mean())
+
+    t = (config['stable_interval_start'], config['stable_interval_end'])
+    sq_raw = (rms_s2s(lm.loc[t[0]:t[1], 'left_pupil_size_mm'])
+              + rms_s2s(lm.loc[t[0]:t[1], 'right_pupil_size_mm'])) / 2
+
+    sq_smooth = (rms_s2s(lm.loc[t[0]:t[1], 'left_smooth_pupil_size_mm'])
+                 + rms_s2s(lm.loc[t[0]:t[1], 'right_smooth_pupil_size_mm'])) / 2
+
+    return {'raw_signal_quality': sq_raw, 'smooth_signal_quality': sq_smooth}
+
+
+def plot_noise_reduction(lm, test_id, sq, flash_duration):
+    _, ax = plt.subplots(1, 1, num=f'Noise Reduction {test_id}')
+    lm.left_pupil_size_mm.plot(color='b', linestyle='', marker='.', markersize=1, label='left eye raw', ax=ax)
+    lm.right_pupil_size_mm.plot(color='r', linestyle='', marker='.', markersize=1, label='right eye raw', ax=ax)
+    lm.left_smooth_pupil_size_mm.plot(color='b', linestyle='-', label='left eye smooth', ax=ax)
+    lm.right_smooth_pupil_size_mm.plot(color='r', linestyle='-', label='right eye smooth', ax=ax)
+    # plt.axvline(0, color='k', linestyle='--', label='Flash onset')
+    plt.axvspan(0, flash_duration, color='k', alpha=0.1, label='Flash')
+    plt.legend()
+    plt.xlabel('Time from flash onset (seconds)')
+    plt.ylabel('Pupil size (mm)')
+    plt.title(f'Signal quality: {sq["raw_signal_quality"]:.3f}mm raw, {sq["smooth_signal_quality"]:.3f}mm smooth\n({test_id})')
 
 
 if __name__ == '__main__':
@@ -103,47 +130,68 @@ if __name__ == '__main__':
     with open('./landmark_definitions.json', 'r') as json_file:
         lm_defs = json.load(json_file)
 
+    summary = {}
 
-    plt.figure(num='pupil size')
-
-    for rec_id in os.listdir(data_dir):
-        logging.info(f'processing {rec_id}')
+    for test_id in os.listdir(data_dir):
+        logging.info(f'processing {test_id}')
+        os.makedirs(os.path.join('figures', test_id), exist_ok=True)
         try:
-            lm = load_plr_data(data_dir, rec_id)
+            lm, flash_duration = load_plr_data(data_dir, test_id)
+
+            # for lm_id in range(1,28):
+            #     plot_landmark(lm, lm_id)
 
             # skipping if dataloss is too high
             ok_count = lm['retcode'].value_counts()['OK']
             dataloss = 1.0 - ok_count / len(lm)
+            summary[test_id] = {'dataloss': dataloss}
+
             if dataloss > config['max_dataloss']:
-                logging.error(f'{rec_id} very high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK); skipping')
+                logging.error(f'{test_id} very high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK); skipping')
                 continue
             if dataloss > config['warn_dataloss']:
-                logging.warning(f'{rec_id} high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK)')
+                logging.warning(f'{test_id} high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK)')
             else:
-                logging.info(f'{rec_id} data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK)')
+                logging.info(f'{test_id} data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK)')
 
         except Exception as e:
-            logging.error(f'failed loading recording {rec_id} from {data_dir}', exc_info=True)
+            logging.error(f'failed loading recording {test_id} from {data_dir}', exc_info=True)
             continue
 
         try:
-            plt.figure(num='pupil size')
             for eye in ['left', 'right']:
-                pupil_size = calculate_pupil_size(lm, eye)
-                col = f'{eye}_mean_pupil_size_mm'
+                pupil_size = calculate_pupil_size(lm, eye, config['nominal_iris_size_mm'])
+                col = f'{eye}_pupil_size_mm'
                 lm[col] = pupil_size[col]
-                plt.plot(lm.index, lm[col], label=f'{rec_id} {eye}', linewidth=1, alpha=0.5,
+
+                plt.figure(num='pupil size')
+                plt.plot(lm.index, lm[col], label=f'{test_id} {eye}', linewidth=1, alpha=0.5,
                          color=config['eye_color'][eye])
 
+                # pupil_baseline = lm.loc[-1:0, col].median()
+                # constriction = lm[col] - pupil_baseline
+
         except Exception as e:
-            logging.error(f'failed calculating pupil size for {rec_id}', exc_info=True)
+            logging.error(f'failed calculating pupil size for {test_id}', exc_info=True)
             continue
 
+        try:
+            for eye in ['left', 'right']:
+                lm[f'{eye}_smooth_pupil_size_mm'] = lm[f'{eye}_pupil_size_mm'].rolling(config['smoothing_window']).mean()
+
+            summary[test_id].update(calculate_signal_quality(lm))
+            logging.info(f'{test_id} signal quality: {summary[test_id]['raw_signal_quality']:.3f} mm raw, '
+                         f'{summary[test_id]['smooth_signal_quality']:.3f} mm smooth')
+
+            plot_noise_reduction(lm, test_id, summary[test_id], flash_duration)
+
+        except Exception as e:
+            logging.error(f'noise reduction failed for {test_id}', exc_info=True)
+            continue
+
+        plt.figure(num='pupil size')
         plt.xlabel('Time from flash onset (seconds)')
         plt.ylabel('Pupil size (mm)')
 
-        # for lm_id in range(1,28):
-        #     plot_landmark(lm, lm_id)
-        #
+    summary = pd.DataFrame.from_dict(summary, orient='index')
     plt.show()
-        # break
