@@ -139,6 +139,9 @@ if __name__ == '__main__':
             logging.error(f'failed calculating pupil size for {rec_id}', exc_info=True)
             continue
 
+        plt.xlabel('Time from flash onset (seconds)')
+        plt.ylabel('Pupil size (mm)')
+
         # for lm_id in range(1,28):
         #     plot_landmark(lm, lm_id)
         #
