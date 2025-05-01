@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
-    <option name="sdkName" value="Python 3.13 virtualenv at D:\Dropbox\Projects\Leumi to YNAB\venv" />
+    <option name="enabledOnReformat" value="true" />
+    <option name="enabledOnSave" value="true" />
+    <option name="sdkName" value="Poetry (braineye-plr-test)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Poetry (braineye-plr-test)" project-jdk-type="Python SDK" />
 </project>

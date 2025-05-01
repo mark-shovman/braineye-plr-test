@@ -10,7 +10,9 @@ requires-python = ">=3.12"
 dependencies = [
     "pandas (>=2.2.3,<3.0.0)",
     "matplotlib (>=3.10.1,<4.0.0)",
-    "mpld3 (==0.5.10)"
+    "mpld3 (==0.5.10)",
+    "scipy (>=1.15.2,<2.0.0)",
+    "black (>=25.1.0,<26.0.0)"
 ]
 
 

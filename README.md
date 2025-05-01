@@ -1,4 +1,4 @@
-# braineye-plr-test
+# BrainEye PLR home assignment - Mark Shovman
 This assignment implements a code pipeline to analyze physiological eye-tracking data collected from users.
 
 The dataset provided for this assignment contains a collection of pupillary light reflex (PLR) tests conducted by our app users. In each PLR test, the user looked into the phone camera while their eyes were recorded as the flash illuminated them for about three seconds, eliciting the pupillary light reflex.
@@ -56,10 +56,8 @@ has the suffix “_protocol.csv”
     * Create a figure showing pupil size over time, the period the light was on, the point you identified as the “start of constriction”, and the point of maximum constriction.
 
 # Files
-* `analyse_plr.py` - main analysis pipeline
+* `plr_pipeline.py` - main analysis pipeline
+* `plr.py` - functions for loading and processind PLR data
+* `plr_plot.py` - functions for plotting PLR data
 * `landmark_definitions.json` - converted from `Landmark Definitions.pdf` using Claude
 * `config.json` - various configurable parameters
-
-# TODO
-* split into files: pipeline, logic, plotting
-* save figures to folders
