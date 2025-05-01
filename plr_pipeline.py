@@ -6,7 +6,12 @@ import json
 
 from plr_plot import plot_noise_reduction, plot_landmark
 
-from plr import load_plr_data, calculate_pupil_size, calculate_signal_quality
+from plr import (
+    load_plr_data,
+    calculate_pupil_size,
+    calculate_signal_quality,
+    calculate_eye_openness,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -68,6 +73,11 @@ if __name__ == "__main__":
                 col = f"{eye}_pupil_size_mm"
                 lm[col] = pupil_size[col]
 
+                # _, ax = plt.subplots(
+                #     7, 1, sharex=True, num=f"{eye} pupil size\n{test_id}"
+                # )
+                # pupil_size.plot(subplots=True, ax=ax)
+
                 plt.figure(num="pupil size")
                 plt.plot(
                     lm.index,
@@ -80,9 +90,6 @@ if __name__ == "__main__":
                 plt.xlabel("Time from flash onset (seconds)")
                 plt.ylabel("Pupil size (mm)")
                 plt.grid(True)
-
-                # pupil_baseline = lm.loc[-1:0, col].median()
-                # constriction = lm[col] - pupil_baseline
 
         except Exception as e:
             logging.error(f"failed calculating pupil size for {test_id}", exc_info=True)
@@ -122,6 +129,14 @@ if __name__ == "__main__":
 
         except Exception as e:
             logging.error(f"noise reduction failed for {test_id}", exc_info=True)
+            continue
+
+        try:
+            for eye in ["left", "right"]:
+                eo = calculate_eye_openness(lm, eye)
+
+        except Exception as e:
+            logging.error(f"blink removal failed for {test_id}", exc_info=True)
             continue
 
     summary = pd.DataFrame.from_dict(summary, orient="index")
