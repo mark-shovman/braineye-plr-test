@@ -38,6 +38,11 @@ has the suffix “_protocol.csv”
      * I can think of three simple options for assessing signal instability: range, standard deviation, and, specifically for frame-to-frame pixel noise, RMS-S2S. It is often used in eyetracking data quality reporting, so I am going with it. 
 4. Noise Reduction
    * Reduce noise in the pupil size signal using any method you consider suitable. Describe the technique you chose and explain your reasoning.
+   * My Notes:
+     * A simple, fast, and effective way to deal with frame-to-frame noise is to average over a small rolling window, 3 to 5 samples. 
+     * I used a Tukey (tapered cosine) window of length 5, which is likely overkill, but a bit cleaner than just a flat window.
+     * Both parameters (window size and type) are in the config file, so easy to experiment with.
+     * That improved signal quality by 0.162 mm on average. 
 5. Noise Reduction Figure
    * Create a figure showing pupil size over time, both before and after noise reduction.
    Include the pupil size signal quality measure developed in Stage 2 in the figure’s title,
