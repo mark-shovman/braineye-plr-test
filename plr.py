@@ -43,10 +43,10 @@ def load_plr_data(data_dir: str, test_id):
     lm["is_flash_on"] = False
     lm.loc[(lm.timestamp >= onset) & (lm.timestamp <= offset), "is_flash_on"] = True
 
-    lm.index = (lm.timestamp - onset).dt.total_seconds()
-    lm.index.name = "time_from_flash_s"
+    lm.index = (lm.timestamp - onset).dt.total_seconds() * 1000
+    lm.index.name = "time_from_flash_ms"
 
-    return lm, (offset - onset) / np.timedelta64(1, "s")
+    return lm, (offset - onset) / np.timedelta64(1, "ms")
 
 
 def _calculate_landmark_distance(lm, eye, lm_pairs):
@@ -147,3 +147,31 @@ def detect_blinks(
     )
 
     return ret
+
+
+def calculate_biomarkers(ps, ctn_start_velocity_th_mms, sg_window, sg_poly_order):
+
+    ctn_speed_mms = (
+        savgol_filter(
+            ps,
+            window_length=sg_window,
+            polyorder=sg_poly_order,
+            deriv=1,
+        )
+        / ps.index.to_series().diff()
+        * 1000
+    )
+
+    ctn_latency = (ctn_speed_mms < ctn_start_velocity_th_mms).idxmax()
+    ctn_max = (ps == ps.min()).idxmax()
+    total_ctn = ps[:ctn_latency].max() - ps.min()
+    ctn_velocity = total_ctn / (ctn_max - ctn_latency)
+    ctn_max_velocity = -ctn_speed_mms[ctn_latency].min()
+
+    return {
+        "total_ctn_mm": total_ctn,
+        "ctn_latency_ms": ctn_latency,
+        "ctn_velocity_mms": ctn_velocity,
+        "ctn_max_velocity_mms": ctn_max_velocity,
+        "ctn_max_time_ms": ctn_max,
+    }

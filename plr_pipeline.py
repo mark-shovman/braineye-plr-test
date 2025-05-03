@@ -6,7 +6,7 @@ import logging
 import matplotlib.pyplot as plt
 import json
 
-from plr_plot import plot_noise_reduction, plot_landmark
+from plr_plot import plot_noise_reduction, plot_landmark, plot_constriction
 
 from plr import (
     load_plr_data,
@@ -14,6 +14,7 @@ from plr import (
     calculate_signal_quality,
     calculate_eye_openness,
     detect_blinks,
+    calculate_biomarkers,
 )
 
 logging.basicConfig(
@@ -34,6 +35,7 @@ if __name__ == "__main__":
         lm_defs = json.load(json_file)
 
     summary = {}
+    biomarkers = {}
 
     for i, test_id in enumerate(os.listdir(data_dir)):
         logging.info(f"processing {test_id}")
@@ -106,7 +108,7 @@ if __name__ == "__main__":
                     alpha=0.5,
                     color=config["eye_color"][eye],
                 )
-                plt.xlabel("Time from flash onset (seconds)")
+                plt.xlabel("Time from flash onset (milliseconds)")
                 plt.ylabel("Pupil size (mm)")
                 plt.grid(True)
 
@@ -119,9 +121,9 @@ if __name__ == "__main__":
                 lm[f"{eye}_smooth_pupil_size_mm"] = (
                     lm[f"{eye}_pupil_size_mm"]
                     .rolling(
-                        config["smoothing_window"],
+                        config["noise_reduction"]["smoothing_window"],
                         center=True,
-                        win_type=config["smoothing_window_type"],
+                        win_type=config["noise_reduction"]["smoothing_window_type"],
                     )
                     .mean()
                 )
@@ -129,7 +131,10 @@ if __name__ == "__main__":
             summary[test_id].update(
                 calculate_signal_quality(
                     lm,
-                    t=(config["stable_interval_start"], config["stable_interval_end"]),
+                    t=(
+                        config["noise_reduction"]["stable_interval_start"],
+                        config["noise_reduction"]["stable_interval_end"],
+                    ),
                 )
             )
             logging.info(
@@ -150,16 +155,38 @@ if __name__ == "__main__":
             logging.error(f"noise reduction failed for {test_id}", exc_info=True)
             continue
 
-        #
-        # if i > 3:
-        #     break
+        try:
+            for eye in ["left", "right"]:
+                ps = lm.loc[0:flash_duration, f"{eye}_smooth_pupil_size_mm"]
+                biomarkers[(test_id, eye)] = calculate_biomarkers(
+                    lm.loc[0:flash_duration, f"{eye}_smooth_pupil_size_mm"],
+                    **config["constriction"],
+                )
 
-    summary = pd.DataFrame.from_dict(summary, orient="index")
-    summary.index.name = "test_id"
-    summary.to_csv("summary.csv")
+                plot_constriction(
+                    lm[f"{eye}_smooth_pupil_size_mm"],
+                    biomarkers[(test_id, eye)],
+                    f"{test_id} - {eye}",
+                    flash_duration,
+                    path=os.path.join(
+                        ".", "figures", test_id, f"pupil_constriction_{eye}.pdf"
+                    ),
+                )
+        except Exception as e:
+            logging.error(f"biomarker calculations failed for {test_id}", exc_info=True)
+            continue
 
     fig = plt.figure(num="pupil size")
     plt.savefig("figures/pupil_size_mm.png")
     plt.close(fig)
 
-    plt.show()
+    summary = pd.DataFrame.from_dict(summary, orient="index")
+    summary.index.name = "test_id"
+    summary.to_csv("reports/pipeline_summary.csv")
+
+    biomarkers = pd.DataFrame.from_dict(biomarkers, orient="index")
+    biomarkers.index.set_names(["test_id", "eye"], inplace=True)
+    biomarkers.to_csv("reports/biomarkers.csv")
+
+    if plt.get_fignums():
+        plt.show()

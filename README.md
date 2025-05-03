@@ -64,8 +64,12 @@ has the suffix “_protocol.csv”
    * Total Constriction: The amount of pupil constriction from the constriction onset to the point of maximum constriction (in pixels or mm).
    * Constriction Velocity: The speed of constriction (in pixels/sec or mm/sec).
    * Note: To calculate these features, first determine the “start of constriction”.
+   * My Notes:
+     * Calculated velocity in the same way as for eye openness, but with a wider window for a smoother signal
+     * Also calculated maximum pupil constriction velocity, another widely used signal
 8. Pupil Size and Constriction Figure
     * Create a figure showing pupil size over time, the period the light was on, the point you identified as the “start of constriction”, and the point of maximum constriction.
+   
 
 # Files
 * `plr_pipeline.py` - main analysis pipeline
@@ -73,3 +77,7 @@ has the suffix “_protocol.csv”
 * `plr_plot.py` - functions for plotting PLR data
 * `landmark_definitions.json` - converted from `Landmark Definitions.pdf` using Claude
 * `config.json` - various configurable parameters
+* `figures\` - directory with the generated figures
+* `reports\` - directory with generated reports:
+  * `pipeline_summary.csv` - for each test (including those skipped because of high dataloss) log dataloss and signal quality
+  * `biomarkers.csv` - for each test and each eye, log biomarkers

@@ -1,5 +1,6 @@
 {
   "data_dir": "./plr_data",
+  "nominal_iris_size_mm": 11.7,
 
   "dataloss": {
     "warning": 0.1,
@@ -11,13 +12,12 @@
     "right": "red"
   },
 
-  "smoothing_window": 5,
-  "smoothing_window_type": "tukey",
-
-  "stable_interval_start": -1,
-  "stable_interval_end": 0,
-
-  "nominal_iris_size_mm": 11.7,
+  "noise_reduction": {
+    "smoothing_window": 11,
+    "smoothing_window_type": "tukey",
+    "stable_interval_start": -1000,
+    "stable_interval_end": 0
+  },
 
   "blink": {
     "sg_window": 5,
@@ -25,5 +25,11 @@
     "openness_th": 0.5,
     "speed_th": 0.05,
     "blink_interval_window": 3
+  },
+
+  "constriction": {
+    "sg_window": 11,
+    "sg_poly_order": 2,
+    "ctn_start_velocity_th_mms": -0.5
   }
 }
