@@ -118,22 +118,32 @@ def calculate_eye_openness(lm, eye):
     return ret
 
 
-def detect_blinks(lm, eye, eo):
-
-    # Savitzky-Golay filter parameters,
-    # TODO: move to config
-    SG_WINDOW = 5  # Must be odd
-    SG_POLYORDER = 2
-    BLINk_TH = 0.05
+def detect_blinks(
+    lm, eye, eo, sg_window, sg_poly_order, openness_th, speed_th, blink_interval_window
+):
+    """
+    Blink is defined by either the eye being less open than `openness_th`,
+    or the speed of the eyelid opening/closing being greater than `speed_th`
+    """
 
     ret = pd.DataFrame(index=lm.index)
     ret[f"{eye}_speed"] = np.abs(
         savgol_filter(
             eo[f"{eye}_mean_eye_openness_nz"],
-            window_length=SG_WINDOW,
-            polyorder=SG_POLYORDER,
+            window_length=sg_window,
+            polyorder=sg_poly_order,
             deriv=1,
         )
+    )
+
+    ret[f"{eye}_is_blink"] = (
+        (
+            (ret[f"{eye}_speed"] > speed_th)
+            | (eo[f"{eye}_mean_eye_openness_nz"] < openness_th)
+        )
+        .rolling(window=blink_interval_window, center=True, min_periods=1)
+        .median()
+        .astype(bool)
     )
 
     return ret

@@ -52,6 +52,13 @@ has the suffix “_protocol.csv”
    * Detect and remove blinks from the data. Hint: Start by creating a signal indicating how
    open the eye is, then examine it to identify blink segments and choose a method for
    removing them. Keep in mind that not all tests will contain blinks.
+   * My Notes:
+     * I define blink as a period where either the eye openness (relative to max eye openness for this test) is lower than some threshold, 
+     or the speed of change of eye openness is higher than some threshold
+     * Eye openness is calculated from five pairs of landmarks, each normalized relative to its own max (not min) and then averaged.
+     * Speed is calculated with a II-order Savitsky-Golay filter.
+     * Landmark data during blinks is set to NaN separately for each eye
+     * Blink detection and removal happen right after loading the landmarks, to reduce noise in the next steps - only the `is_blink` flag is kept.
 7. Calculate Biomarkers for Each Eye
    * Constriction Latency: The reaction time of the pupil to the light (in ms).
    * Total Constriction: The amount of pupil constriction from the constriction onset to the point of maximum constriction (in pixels or mm).

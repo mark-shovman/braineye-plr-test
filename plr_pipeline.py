@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 import pandas as pd
 import logging
 import matplotlib.pyplot as plt
@@ -11,6 +13,7 @@ from plr import (
     calculate_pupil_size,
     calculate_signal_quality,
     calculate_eye_openness,
+    detect_blinks,
 )
 
 logging.basicConfig(
@@ -32,7 +35,7 @@ if __name__ == "__main__":
 
     summary = {}
 
-    for test_id in os.listdir(data_dir):
+    for i, test_id in enumerate(os.listdir(data_dir)):
         logging.info(f"processing {test_id}")
         os.makedirs(os.path.join("figures", test_id), exist_ok=True)
         try:
@@ -45,12 +48,12 @@ if __name__ == "__main__":
             dataloss = 1.0 - ok_count / len(lm)
             summary[test_id] = {"dataloss": dataloss}
 
-            if dataloss > config["max_dataloss"]:
+            if dataloss > config["dataloss"]["error"]:
                 logging.error(
                     f"{test_id} very high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK); skipping"
                 )
                 continue
-            if dataloss > config["warn_dataloss"]:
+            if dataloss > config["dataloss"]["warning"]:
                 logging.warning(
                     f"{test_id} high data loss: {dataloss:.1%} ({ok_count}/{len(lm)} OK)"
                 )
@@ -63,6 +66,22 @@ if __name__ == "__main__":
             logging.error(
                 f"failed loading recording {test_id} from {data_dir}", exc_info=True
             )
+            continue
+
+        try:
+            for eye in ["left", "right"]:
+                eo = calculate_eye_openness(lm, eye)
+                blink = detect_blinks(lm, eye, eo, **config["blink"])
+
+                lm.loc[
+                    blink[f"{eye}_is_blink"],
+                    [c for c in lm.columns if c.startswith(eye)],
+                ] = np.nan
+
+                lm[f"{eye}_is_blink"] = blink[f"{eye}_is_blink"]
+
+        except Exception as e:
+            logging.error(f"blink removal failed for {test_id}", exc_info=True)
             continue
 
         try:
@@ -131,13 +150,9 @@ if __name__ == "__main__":
             logging.error(f"noise reduction failed for {test_id}", exc_info=True)
             continue
 
-        try:
-            for eye in ["left", "right"]:
-                eo = calculate_eye_openness(lm, eye)
-
-        except Exception as e:
-            logging.error(f"blink removal failed for {test_id}", exc_info=True)
-            continue
+        #
+        # if i > 3:
+        #     break
 
     summary = pd.DataFrame.from_dict(summary, orient="index")
     summary.index.name = "test_id"
